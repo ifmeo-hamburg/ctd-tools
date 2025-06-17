@@ -5,6 +5,7 @@ import numpy as np
 import gsw
 import re
 import csv
+import scipy
 
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -509,4 +510,65 @@ class NortekAsciiReader(AbstractReader):
         self.data = ds
 
     def get_data(self):
+        return self.data
+
+class RCM_matlab_Reader_14: 
+    def __init__(self, mat_file_path):
+        self.mat_file_path = mat_file_path
+        self.__read()
+
+    # read adcp file and make alterations to dataset
+    # also convert to pandas dataframe
+    def __parse_data(self, mat_file_path):
+        
+        # read adcp file 
+        data = scipy.io.loadmat(mat_file_path)
+        #prepare for alteration 
+        def mat_to_dict(data):
+            return {key: data[key].flatten() if hasattr(data[key], 'flatten') else data[key] for key in data.keys()}
+        data = mat_to_dict(data)
+        # convert julian time to datetime
+        data['time'] = pd.to_datetime(data['t'] - 719529, unit='D')
+        # remove original julian time 
+        data.pop('t')
+        # make alterations to dataset
+    
+
+        #create pandas dataframe 
+        df = pd.DataFrame(dict([(key, pd.Series(value)) for key, value in data.items()]))
+
+        # set time as index
+        df.set_index('time', inplace=True)
+
+        return df  
+
+    # create xarray dataset from pandas dataframe
+    def __create_xarray_dataset(self, df):
+
+        
+        ds = xr.Dataset.from_dataframe(df)
+
+        #rename variables after cf convention 
+        ds = ds.rename_vars({'u': 'east_velocity', 'v': 'north_velocity', 'temp': 'temperature', 'cond': 'conductivity', 'pres': 'pressure', 'vdir': 'vdir', 'vmag': 'vmag'})
+
+        #add metadata for cf compliance
+        ds["east_velocity"].attrs = {"units": "m/s", "long_name": "Eastward velocity", "standard_name": "eastward_sea_water_velocity"}
+        ds["north_velocity"].attrs = {"units": "m/s", "long_name": "Northward velocity", "standard_name": "northward_sea_water_velocity"}
+        ds["temperature"].attrs = {"units": "°C", "long_name": "Temperature", "standard_name": "sea_water_temperature"}
+        ds['conductivity'].attrs = {"units": "S/m", "long_name": "Conductivity", "standard_name": "sea_water_conductivity"}
+        ds['pressure'].attrs = {"units": "dbar", "long_name": "Pressure", "standard_name": "sea_water_pressure"}
+
+        ds.attrs["Conventions"] = "CF-1.8"
+        ds.attrs["title"] = "RCM Data"
+        ds.attrs["institution"] = "University of Hamburg"
+        ds.attrs["source"] = "Recording Current Meter-Aanderaa"
+        
+        return ds
+
+    def __read(self): 
+        data = self.__parse_data(self.mat_file_path)
+        ds = self.__create_xarray_dataset(data)
+        self.data = ds
+
+    def get_data(self): 
         return self.data
