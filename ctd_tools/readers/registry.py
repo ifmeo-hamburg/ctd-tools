@@ -102,6 +102,13 @@ READER_REGISTRY: List[ReaderMetadata] = [
         format_key="nortek-ascii",
         file_extension=None
     ),
+    ReaderMetadata(
+        class_name="AdcpMatlabReader",
+        module_name=".adcp_matlab_reader",
+        format_name="ADCP Matlab",
+        format_key="adcp-matlab",
+        file_extension= None
+    ),
 ]
 
 

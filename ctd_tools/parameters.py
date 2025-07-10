@@ -27,6 +27,14 @@ UP_AMPLITUDE = 'up_amplitude'
 SOUNDSPEED = 'speed_of_sound'
 CHLOROPHYLL = 'chlorophyll'
 FLUORESCENCE = 'fluorescence'
+ECHO_INTENSITY = 'echo_intensity'
+CORRELATION = 'correlation'
+DIRECTION = 'direction'
+MAGNITUDE = 'magnitude'
+PITCH = 'pitch'
+ROLL = 'roll'
+HEADING = 'heading'
+BATTERY_VOLTAGE = 'battery_voltage'
 
 # Meta data should use standardized values from https://cfconventions.org/
 metadata = {
@@ -141,6 +149,46 @@ metadata = {
         'units': 'm/s',
         'long_name': 'Speed of sound in sea water',
         'standard_name': 'speed_of_sound_in_sea_water',
+    },
+    ECHO_INTENSITY: {
+        'units': 'dB',
+        'long_name': 'Echo intensity',
+        'standard_name': 'echo_intensity',
+    },
+    CORRELATION: {
+        'units': 'unitless',
+        'long_name': 'Correlation',
+        'standard_name': 'correlation',
+    },
+    DIRECTION: {
+        'units': 'degrees',
+        'long_name': 'Current direction',
+        'standard_name': 'direction',
+    },
+    MAGNITUDE: {
+        'units': 'm/s',
+        'long_name': 'Current magnitude',
+        'standard_name': 'magnitude',
+    },
+    PITCH: {
+        'units': 'degrees',
+        'long_name': 'Pitch angle',
+        'standard_name': 'platform_pitch_angle',
+    },
+    ROLL: {
+        'units': 'degrees',
+        'long_name': 'Roll angle',
+        'standard_name': 'platform_roll_angle',
+    },
+    HEADING: {
+        'units': 'degrees',
+        'long_name': 'Heading angle',
+        'standard_name': 'platform_heading_angle',
+    },
+    BATTERY_VOLTAGE: {
+        'units': 'volts',
+        'long_name': 'Battery voltage',
+        'standard_name': 'battery_voltage',
     }
 }
 
