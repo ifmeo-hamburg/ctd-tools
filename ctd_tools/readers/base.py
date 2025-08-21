@@ -15,6 +15,7 @@ from importlib.metadata import version
 from collections import defaultdict
 import re
 import xarray as xr
+import gsw
 import ctd_tools.parameters as params
 
 MODULE_NAME = 'ctd_tools'
@@ -104,8 +105,8 @@ class AbstractReader(ABC):
         self.sort_variables = sort_variables
 
     def _julian_to_gregorian(self, julian_days, start_date):
-        full_days = int(julian_days)
-        seconds = (julian_days - full_days) * 24 * 60 * 60
+        full_days = int(julian_days) - 1  # Julian days start at 1, not 0
+        seconds = (julian_days - int(julian_days)) * 24 * 60 * 60
         return start_date + timedelta(days=full_days, seconds=seconds)
 
     def _elapsed_seconds_since_jan_1970_to_datetime(self, elapsed_seconds):
@@ -116,7 +117,8 @@ class AbstractReader(ABC):
     def _elapsed_seconds_since_jan_2000_to_datetime(self, elapsed_seconds):
         base_date = datetime(2000, 1, 1)
         time_delta = timedelta(seconds=elapsed_seconds)
-        return base_date + time_delta
+        date_value = base_date + time_delta
+        return date_value
 
     def _elapsed_seconds_since_offset_to_datetime(self, elapsed_seconds, offset_datetime):
         base_date = offset_datetime
@@ -131,15 +133,21 @@ class AbstractReader(ABC):
             raise ValueError(f"Parameter '{params.PRESSURE}' is missing in {entity}.")
 
     def _get_xarray_dataset_template(self, time_array, depth_array, 
-                latitude, longitude):
+                latitude, longitude, depth_name = params.DEPTH):
+        coords = dict(
+            time = time_array,
+            latitude = latitude,
+            longitude = longitude,
+        )
+
+        # Only add depth coordinate if depth_array is not None
+        if depth_array is not None:
+            coords[depth_name] = ([params.TIME], depth_array)
+
         return xr.Dataset(
-            data_vars = dict(), 
-            coords = dict(
-                time = time_array,
-                depth = ([params.TIME], depth_array),
-                latitude = latitude,
-                longitude = longitude,
-            ), attrs = dict(
+            data_vars = dict(),
+            coords = coords,
+            attrs = dict(
                 latitude = latitude,
                 longitude = longitude,
                 CreateTime = datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
@@ -171,6 +179,70 @@ class AbstractReader(ABC):
             if unit:
                 label = label.replace(f"[{unit}]", '').strip() # Remove unit from label
             ds[key].attrs['long_name'] = label
+
+    def _derive_oceanographic_parameters(self, ds: xr.Dataset) -> xr.Dataset:
+        """Derive oceanographic parameters from temperature, pressure, and salinity.
+        
+        This method calculates derived parameters like density and potential temperature
+        using the Gibbs SeaWater (GSW) oceanographic toolbox when temperature, pressure,
+        and salinity data are available in the xarray Dataset.
+        
+        For multiple sensors (e.g., temperature_1, temperature_2), it will use the first
+        available sensor (temperature_1) or the base parameter name if only one exists.
+        
+        Parameters
+        ----------
+        ds : xr.Dataset
+            The xarray Dataset containing the sensor data and to add derived parameters to.
+            
+        Returns
+        -------
+        xr.Dataset
+            The xarray Dataset with derived parameters added.
+        """
+        
+        # Find the appropriate temperature variable
+        temperature_var = None
+        if params.TEMPERATURE in ds.data_vars:
+            temperature_var = params.TEMPERATURE
+        elif f"{params.TEMPERATURE}_1" in ds.data_vars:
+            temperature_var = f"{params.TEMPERATURE}_1"
+        
+        # Find the appropriate salinity variable
+        salinity_var = None
+        if params.SALINITY in ds.data_vars:
+            salinity_var = params.SALINITY
+        elif f"{params.SALINITY}_1" in ds.data_vars:
+            salinity_var = f"{params.SALINITY}_1"
+        
+        # Pressure should typically be singular, but check both possibilities
+        pressure_var = None
+        if params.PRESSURE in ds.data_vars:
+            pressure_var = params.PRESSURE
+        elif f"{params.PRESSURE}_1" in ds.data_vars:
+            pressure_var = f"{params.PRESSURE}_1"
+        
+        # Check if we have all required parameters for oceanographic calculations
+        if temperature_var and salinity_var and pressure_var:
+            
+            # Derive density using GSW
+            ds[params.DENSITY] = ([params.TIME], gsw.density.rho(
+                ds[salinity_var].values, 
+                ds[temperature_var].values, 
+                ds[pressure_var].values))
+            
+            # Derive potential temperature using GSW
+            ds[params.POTENTIAL_TEMPERATURE] = ([params.TIME], gsw.pt0_from_t(
+                ds[salinity_var].values, 
+                ds[temperature_var].values, 
+                ds[pressure_var].values))
+            
+            if self.assign_metadata:
+                # Assign metadata for derived parameters
+                self._assign_metadata_for_key_to_xarray_dataset(ds, params.DENSITY)
+                self._assign_metadata_for_key_to_xarray_dataset(ds, params.POTENTIAL_TEMPERATURE)
+                
+        return ds
 
     def _sort_xarray_variables(self, ds: xr.Dataset) -> xr.Dataset:
         """Sorts the variables in an xarray Dataset based on their standard names.
@@ -268,7 +340,7 @@ class AbstractReader(ABC):
         module_reader_class = self.__class__.__name__
         python_version = platform.python_version()
         input_file = self.input_file
-        input_file_type = self.format_name
+        input_file_type = self.format_name()
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # assemble history entry

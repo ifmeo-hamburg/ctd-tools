@@ -35,6 +35,7 @@ PITCH = 'pitch'
 ROLL = 'roll'
 HEADING = 'heading'
 BATTERY_VOLTAGE = 'battery_voltage'
+ALTIMETER = 'altimeter'
 
 # Meta data should use standardized values from https://cfconventions.org/
 metadata = {
@@ -194,16 +195,30 @@ metadata = {
 
 default_mappings = {
     TEMPERATURE: [
-        't090C', 't068', 'tv290C', 't190C', 'TEMP', 'temp', 'Temp', 'Temperature', 'temperature'
+        't090C', 't068', 
+        't190C', 't168',
+        'tv290C', 'TEMP', 'temp', 'Temp', 
+        'Temperature', 'temperature',
+        'T1', 'T2',
+        'temp90', 'temp68'
+    ],
+    POTENTIAL_TEMPERATURE: [
+        'potemp090C', 'potemp190C'
     ],
     SALINITY: [
-        'sal00', 'sal11', 'PSAL2', 'PSAL', 'Salinity'
+        'sal00', 'sal11', 'PSAL2', 'PSAL', 'SAL', 'Salinity'
     ],
     CONDUCTIVITY: [
-        'c0mS/cm', 'c0', 'c1mS/cm', 'c1', 'cond0mS/cm', 'COND', 'Conductivity'
+        'c0mS/cm', 'cond0mS/cm', 'c0', 'c0S/m', 
+        'c1mS/cm', 'cond1mS/cm', 'c1', 'c1S/m',
+        'COND', 'Conductivity',
+        'cond0', 'cond1'
     ],
     PRESSURE: [
-        'prdM', 'prDM', 'pr', 'PRES', 'Pressure', 'Sea Pressure', 'Sea pressure'
+        'prdM', 'prDM', 
+        'pr', 'pr50M', 'pr200M', 'pr350M', 'pr600M', 'pr1000M',
+        'PRES', 'Pressure', 'Sea Pressure', 'Sea pressure',
+        'p'
     ],
     TURBIDITY: [
         'turbWETntu0', 'Turbidity', 'Backscatter'
@@ -224,8 +239,11 @@ default_mappings = {
         'timeS'
     ],
     OXYGEN: [
-        'oxsatMm/Kg', 'oxsolMm/Kg', 'sbeox0', 'sbeox1', 'Oxygen',
-        'Dissolved Oxygen', 'O2', 'Dissolved O2 Saturation',
+        'oxsatMm/Kg', 'oxsolMm/Kg', 
+        'sbeox0V', 'sbeox0', 'sbeox0ML/L', 'sbeox0Mm/Kg', 'sbeox0Mm/L', 'sbeox0PS',
+        'sbeox1V','sbeox1', 'sbeox1ML/L', 'sbeox1Mm/Kg', 'sbeox1Mm/L', 'sbeox1PS',
+        'Oxygen', 'O2', 'OXY', 'Dissolved O2',
+        'Dissolved Oxygen', 'Dissolved O2 Saturation',
         'dissolved_o2_saturation', 'Dissolved O₂', 'Dissolved O₂ saturation'
     ],
     LATITUDE: [
@@ -265,7 +283,17 @@ default_mappings = {
         'Chlorophyll'
     ],
     FLUORESCENCE: [
-        'Fluorescence'
+        'flECO-AFL', 'Fluorescence'
+    ],
+    ALTIMETER: [
+        'altM', 'altimeter'
+    ],
+    DENSITY: [ 
+        'sigma-t00', 'sigma-t11',
+        'sigma-theta00', 'sigma-theta11',
+        'dens00', 'dens11',
+        'Density', 'density',
+        'SIGMA', 'Sigma', 'sigma'
     ]
 }
 
