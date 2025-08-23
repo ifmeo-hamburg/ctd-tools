@@ -8,10 +8,13 @@ based on the file format.
 
 Available Readers:
 -----------------
+- AdcpMatlabReader: Read ADCP Matlab files
 - NetCdfReader: Read NetCDF files
 - CsvReader: Read CSV files
 - RbrAsciiReader: Read RBR ASCII files
 - NortekAsciiReader: Read Nortek ASCII files
+- RbrMatlabLegacyReader: Read RBR Matlab Legacy files
+- RbrMatlabRsktoolsReader: Read RBR Matlab RSKtools files
 - RbrRskLegacyReader: Read legacy RSK files
 - RbrRskReader: Read RSK files
 - RbrRskAutoReader: Auto-detect RSK format
@@ -64,6 +67,8 @@ __all__ = [
     'NetCdfReader', 
     'NortekAsciiReader',
     'RbrAsciiReader',
+    'RbrMatlabLegacyReader',
+    'RbrMatlabRsktoolsReader',
     'RbrRskAutoReader',
     'RbrRskLegacyReader',
     'RbrRskReader',

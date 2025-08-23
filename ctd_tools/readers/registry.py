@@ -123,6 +123,20 @@ READER_REGISTRY: List[ReaderMetadata] = [
         format_key="sbe-ascii",
         file_extension=None
     ),
+    ReaderMetadata(
+        class_name="RbrMatlabLegacyReader",
+        module_name=".rbr_matlab_legacy_reader",
+        format_name="RBR Matlab Legacy",
+        format_key="rbr-matlab-legacy",
+        file_extension=None
+    ),
+    ReaderMetadata(
+        class_name="RbrMatlabRsktoolsReader",
+        module_name=".rbr_matlab_rsktools_reader",
+        format_name="RBR Matlab RSKtools",
+        format_key="rbr-matlab-rsktools",
+        file_extension=None
+    ),
 ]
 
 # Utility functions to extract information from registry
